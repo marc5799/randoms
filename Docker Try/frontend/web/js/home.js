@@ -10,7 +10,7 @@ new Vue({
     },
     methods: {
         logOut() {
-            axios.post('http://192.168.99.100:8000/logout',
+            axios.post('/api/logout',
             {
                 logged: "0",
             })

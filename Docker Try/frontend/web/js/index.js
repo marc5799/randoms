@@ -13,7 +13,7 @@ new Vue({
     },
     methods: {
         signUp() {
-            axios.post('http://192.168.99.100:8000/',
+            axios.post('/api/',
             {
                 username: this.username,
                 password: this.password,
@@ -21,7 +21,7 @@ new Vue({
             .then(response => {this.message = response.data})
         },
         signIn() {
-            axios.post('http://192.168.99.100:8000/signin', 
+            axios.post('/api/signin', 
             {
                 username: this.username,
                 password: this.password,

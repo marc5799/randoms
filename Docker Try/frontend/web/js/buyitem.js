@@ -7,7 +7,7 @@ new Vue({
         cc: null,
     },
     mounted: function() {
-        axios.post('http://192.168.99.100:8000/boughtitem',
+        axios.post('/api/boughtitem',
         {
             id_item: localStorage.getItem('bought_id')
         })
@@ -15,7 +15,7 @@ new Vue({
     },
     methods: {
         buy() {
-            axios.post('http://192.168.99.100:8000/buy', 
+            axios.post('/api/buy', 
             {
                 cc: this.cc,
                 bought_id: localStorage.getItem('bought_id'),
@@ -25,7 +25,7 @@ new Vue({
             })
         },
         logOut() {
-            axios.post('http://192.168.99.100:8000/logout',
+            axios.post('/api/logout',
             {
                 logged: "0",
             })

@@ -7,7 +7,7 @@ new Vue({
     mounted: function() {
         axios({
             method: 'get',
-            url: 'http://192.168.99.100:8000/items'
+            url: '/api/items'
         })
         .then(response => {this.items = response.data})
     },
@@ -17,7 +17,7 @@ new Vue({
             window.location.href = 'buyitem.html'
         },
         logOut() {
-            axios.post('http://192.168.99.100:8000/logout',
+            axios.post('/api/logout',
             {
                 logged: "0",
             })
