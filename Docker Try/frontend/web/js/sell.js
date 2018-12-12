@@ -1,25 +1,24 @@
 new Vue({
-    el: '#buyitem',
+    el: '#sell',
     data: {
-        bought_item: null,
-        item: [],
-        id_item: null,
-        cc: null,
+        name: null,
+        price: null,
+        image: null,
         message: null,
     },
     mounted: function() {
-        axios.post('/api/boughtitem',
-        {
-            id_item: localStorage.getItem('bought_id')
-        })
-        .then(response => {this.bought_item = response.data})
+        logged = localStorage.getItem('loggedin')
+        if (logged == null){
+            window.location.href = '/login.html'
+        }
     },
     methods: {
-        buy() {
-            axios.post('/api/buy', 
+        sellItem() {
+            axios.post('/api/sell',
             {
-                cc: this.cc,
-                bought_id: localStorage.getItem('bought_id'),
+                name: this.name,
+                price: this.price,
+                image: this.image,
             })
             .then(response => {
                 this.message = response.data

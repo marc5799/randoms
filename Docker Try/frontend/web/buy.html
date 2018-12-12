@@ -13,22 +13,22 @@
           <a href=""><img src="css/Gunhub.jpg"></a>
         </div>
         <ul class="main-nav">
-          <li><a href="home.html">HOME</a></li>
-          <li class="active"><a href="buy.html">SHOP</a></li>
-          <li><a href="buy.html">BUY</a></li>
-          <li><a href="sell.html">SELL</a></li>
-          <li><a href="history.html">HISTORY</a></li>
-          <li><a href="edit.html">EDIT</a></li>
-          <li><a href="about.html">ABOUT</a></li>
-          <li><a v-on:click="logOut">LOGOUT</li>
+          <li><a href="/home.html">HOME</a></li>
+          <li class="active"><a href="/buy.html">SHOP</a></li>
+          <li><a href="/buy.html">BUY</a></li>
+          <li><a href="/sell.html">SELL</a></li>
+          <li><a href="/history.html">HISTORY</a></li>
+          <li><a href="/edit.html">EDIT</a></li>
+          <li><a href="/about.html">ABOUT</a></li>
+          <li><a v-on:click="logOut">LOGOUT</a></li>
         </ul>    
       <br>
           <h1>ITEMS (that i didnt sell)</h1>
-          <ul id="itemlist">
+          <ul>
           <li v-for="item in items">
-          <img src="{{item.link}}">
+          <img v-bind:src="item.link">
             Item ID: {{item.item_id}} || Item name: {{item.name}} ||  Price: PHP{{item.price}} || Seller: {{item.seller_name}}
-               <input class="buy-btn" type="button" value="Buy" v-on:click="buyItem">
+              <input class="buy-btn" type="button" value="Buy" v-on:click="buyItem">
           </li>
           </ul>
       </div>

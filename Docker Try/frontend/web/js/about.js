@@ -1,5 +1,5 @@
 new Vue({
-    el: '#home',
+    el: '#about',
     data: {
     },
     mounted: function() {

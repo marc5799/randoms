@@ -8,7 +8,7 @@ new Vue({
     mounted: function() {
         log = localStorage.getItem('loggedin')
         if (log != null){
-            window.location.href = 'home.html'
+            window.location.href = '/home.html'
         }
     },
     methods: {
@@ -31,7 +31,7 @@ new Vue({
                     if (response.data != '0') 
                         {
                             localStorage.setItem('loggedin', response.data)
-                            window.location.href = 'home.html'
+                            window.location.href = '/home.html'
                         }
                     else {
                         this.message = `Invalid Inputs` ;

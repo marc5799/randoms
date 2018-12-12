@@ -7,17 +7,17 @@ new Vue({
     mounted: function() {
         axios({
             method: 'get',
-            url: '/api/items'
+            url: 'http://localhost:5000/items'
         })
         .then(response => {this.items = response.data})
     },
     methods: {
         buyItem: function() {
-            localStorage.setItem('bought_id', this.bought_id)
+            localStorage.setItem('bought_id', '1')
             window.location.href = 'buyitem.html'
         },
         logOut() {
-            axios.post('/api/logout',
+            axios.post('http://localhost:5000/logout',
             {
                 logged: "0",
             })

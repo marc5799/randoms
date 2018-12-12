@@ -1,12 +1,14 @@
 new Vue({
-    el: '#home',
+    el: '#history',
     data: {
+        items: [],
     },
     mounted: function() {
-        logged = localStorage.getItem('loggedin')
-        if (logged == null){
-            window.location.href = '/login.html'
-        }
+        axios({
+            method: 'get',
+            url: '/api/history'
+        })
+        .then(response => {this.items = response.data})
     },
     methods: {
         logOut() {

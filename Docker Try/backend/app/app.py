@@ -1,22 +1,27 @@
 import os
 
-from flask import render_template, request, redirect,  url_for
+from flask import render_template, Flask, request, redirect, jsonify, url_for
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
+from flask_reverse_proxy import FlaskReverseProxied
+
+from config import Configuration
+from models import db, ma, Item, History, Account, loggedin, DetailedUserSchema
 
 from models import *
 import click
 from flask.cli import FlaskGroup
 
+proxy = FlaskReverseProxied()
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = Configuration.SQLALCHEMY_DATABASE_URI
-db = SQLAlchemy(app)
+proxy.init_app(app)
 db.init_app(app)
+ma.init_app(app)
 
 CORS(app)
 
-
-ma = Marshmallow(app)
 bcrypt = Bcrypt(app)
 
 
@@ -55,7 +60,6 @@ def verifyCC(cc):
 
 @app.route("/", methods=["POST"])
 def  index():
-    message = ""
     payload = request.get_json()
     username = payload.get('username')
     password = payload.get('password')
@@ -74,8 +78,9 @@ def  index():
             message = "Invalid input details"
             return message
     except Exception as e:
-            return message
-
+            return
+    accounts = Account.query.all()
+    return message
 
 
 @app.route("/signin", methods=["POST"])
@@ -90,11 +95,15 @@ def signin():
         return logged
     else:
         if bcrypt.check_password_hash(account.password, password):
-            loggedinaccount = loggedin(username=account.username)
-            db.session.add(loggedinaccount)
-            db.session.commit()
-            logged = account.password
-            return logged
+        	openaccount = loggedin.query.first()
+        	if openaccount != None:
+        		db.session.delete(openaccount)
+        		db.session.commit()	
+        	loggedinaccount = loggedin(username=account.username)
+        	db.session.add(loggedinaccount)
+        	db.session.commit()
+        	logged = account.password
+        	return logged
         else:
             logged = "0"
             return logged
@@ -104,36 +113,44 @@ def signin():
 def logout():
     payload = request.get_json()
     logged = payload.get('logged')
-    accountlogged = loggedin.query.filter_by(account_id="1").first()
+    accountlogged = loggedin.query.first()
     db.session.delete(accountlogged)
     db.session.commit()
     return logged
 
 
-@app.route("/sell", methods=["GET", "POST"])
+@app.route("/sell", methods=["POST"])
 def sell():
+    payload = request.get_json()
+    name = payload.get('name')
+    price = payload.get('price')
+    image = payload.get('image')
     message = ""
-    if loggedin.query.filter_by(account_id="1").first() is  None:
-        return {redirect("/")}
+    accountloggedin = loggedin.query.first()
+    if name != "" and price != "":
+        item = Item(name=name, price=price, link=image, seller_name= accountloggedin.username)
+        db.session.add(item)
+        db.session.commit()
+        message = "Item successfully posted"
+        return message
     else:
-        accountloggedin = loggedin.query.filter_by(account_id=1).first()
-
-        if request.form:
-            if request.form.get("name") != "" and request.form.get("price") != "":
-                item = Item(name=request.form.get("name"), price=request.form.get("price"), link=request.form.get("link"), seller_name= accountloggedin.username)
-                db.session.add(item)
-                db.session.commit()
-                message = "item successfully posted"
-            else:
-                message = "Invalid item details"
-
-    return render_template("sell.html", message = message )
+        message = "Invalid item details"
+        return message
+    return message
 
 
 @app.route("/items", methods=["GET"])
 def items_to_sell():
-    account = loggedin.query.filter_by(account_id=1).first()
+    account = loggedin.query.first()
     items = Item.query.filter(Item.seller_name != account.username).all()
+    schema = DetailedUserSchema(many=True)
+    response = schema.jsonify(items)
+    return response
+
+@app.route("/youritems", methods=["GET"])
+def kimi_no_item_wa():
+    account = loggedin.query.first()
+    items = Item.query.filter_by(seller_name=account.username).all()
     schema = DetailedUserSchema(many=True)
     response = schema.jsonify(items)
     return response
@@ -150,24 +167,19 @@ def item_to_be_bought():
 
 @app.route("/buy", methods=["POST"])
 def buy():
+    message = ""
     payload = request.get_json()
     bought_id = payload.get('bought_id')
     cc = payload.get('cc')
     bought = bought_id
-    return {'Location': url_for('.hello_id', bought_id=bought, cc=cc)}
-
-
-@app.route("/buyitem/<int:bought_id>", methods=["GET"])
-def hello_id(bought_id, cc):
-    message = ""
     bought_item = Item.query.filter_by(item_id= bought_id).first()
-    accountloggedin = loggedin.query.filter_by(account_id=1).first()
+    accountloggedin = loggedin.query.first()
     if verifyCC(cc) == True:
         toHistory = History(name=bought_item.name, price = bought_item.price, seller_name=bought_item.seller_name, link=bought_item.link, buyer_name=accountloggedin.username )
         db.session.add(toHistory)
         db.session.delete(bought_item)
         db.session.commit()
-        message = ""
+        message = "Item bought successfully"
         return message
     else:
         message = "Error buying item"
@@ -175,57 +187,52 @@ def hello_id(bought_id, cc):
     return message
 
 
-@app.route("/edit", methods=["GET", "POST"])
+@app.route("/edit", methods=["POST"])
 def edit():
-    if loggedin.query.filter_by(account_id="1").first() is  None:
-        return redirect("/")
+    payload = request.get_json()
+    newname = payload.get('name')
+    newprice = payload.get('price')
+    newlink = payload.get('image')
+    itemid = payload.get('bought_id')
+    message = ""
+    if newname != "" and newprice != "":
+        item_id = itemid
+
+        item = Item.query.filter_by(item_id=item_id).first()
+        item.name = newname
+
+        item = Item.query.filter_by(item_id=item_id).first()
+        item.price = newprice
+
+        item = Item.query.filter_by(item_id=item_id).first()
+        item.link = newlink
+
+        db.session.commit()
+        message = "Item successfully updated"
     else:
-        accountloggedin = loggedin.query.filter_by(account_id=1).first()
-        message = ""
-        if request.form:
-            if request.form.get("newname") != "" and request.form.get("newprice") != "":
-                item_id = request.form.get("item_id")
-
-                newname = request.form.get("newname")
-                item = Item.query.filter_by(item_id=item_id).first()
-                item.name = newname
-
-                newprice = request.form.get("newprice")
-                item = Item.query.filter_by(item_id=item_id).first()
-                item.price = newprice
-
-                newlink = request.form.get("newlink")
-                item = Item.query.filter_by(item_id=item_id).first()
-                item.link = newlink
-
-                db.session.commit()
-                message = "Item successfully updated"
-            else:
-                message = "Failed to Edit item"
-
-    items = Item.query.filter_by(seller_name=accountloggedin.username).all()
-    return render_template("edit.html", items=items, message=message)
+        message = "Failed to Edit item"
+    return message
 
 
 @app.route("/delete", methods=["POST"])
 def delete():
-    item_id = request.form.get("item_id")
+    payload = request.get_json()
+    item_id = payload.get('bought_id')
+    message = ""
     item = Item.query.filter_by(item_id=item_id).first()
     db.session.delete(item)
-
     db.session.commit()
-    return redirect("/edit")
+    message = "Item successfully deleted"
+    return message
 
 
 @app.route("/history", methods=["GET"])
 def history():
-    if loggedin.query.filter_by(account_id="1").first() is  None:
-        return redirect("/")
-    else:
-        accountloggedin = loggedin.query.first()
-        history = History.query.filter((History.buyer_name == accountloggedin.username) | (History.seller_name == accountloggedin.username)).all()
-
-    return render_template("history.html", history=history)
+    accountloggedin = loggedin.query.first()
+    history = History.query.filter((History.buyer_name == accountloggedin.username) | (History.seller_name == accountloggedin.username)).all()
+    schema = DetailedHistorySchema(many=True)
+    response = schema.jsonify(history)
+    return response
 
 
 if __name__ == '__main__':

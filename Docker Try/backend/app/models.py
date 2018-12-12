@@ -1,13 +1,9 @@
-from flask import render_template, Flask, request, redirect, jsonify, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from config import Configuration
-from app import db
 
 
-app = Flask(__name__)
 db = SQLAlchemy()
-ma = Marshmallow(app)
+ma = Marshmallow()
 
 class Item(db.Model):
     __tablename__ = 'Item'
@@ -68,3 +64,7 @@ class loggedin(db.Model):
 class DetailedUserSchema(ma.ModelSchema):
     class Meta:
         fields = ('item_id', 'name', 'price', 'seller_name', 'link')
+
+class DetailedHistorySchema(ma.ModelSchema):
+    class Meta:
+        fields = ('history_id', 'name', 'price', 'buyer_name', 'seller_name', 'link')
